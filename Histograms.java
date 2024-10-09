@@ -6,7 +6,6 @@ public class Histograms {
 
     static final int INTENSITY_NUM_BINS = 25;
     static final int INTENSITY_BIN_SIZE = 10;
-
      static final int COLORCODE_NUM_BINS = 64;
 
     // Calculate Intensity Histogram of an image
@@ -14,7 +13,7 @@ public class Histograms {
         int width = image.getWidth();
         int height = image.getHeight();
 
-        int[] histogram = new int[INTENSITY_NUM_BINS]; // +1 to store total pixel count
+        int[] histogram = new int[INTENSITY_NUM_BINS + 1];
         histogram[0] = width * height; // store total pixels / image size
 
         Arrays.fill(histogram, 1, histogram.length, 0); // Filling from index 1
@@ -41,7 +40,7 @@ public class Histograms {
                 if (binIndex >= INTENSITY_NUM_BINS) {
                     binIndex = INTENSITY_NUM_BINS - 1; // Cap at the last bin
                 }
-                histogram[binIndex]++; //  Increment count in the corresponding bin
+                histogram[binIndex + 1]++; //  Increment count in the corresponding bin
             }
         }
 
@@ -53,48 +52,36 @@ public class Histograms {
     public static int[] colorCodeMethod(BufferedImage image) {
         int width = image.getWidth();
         int height = image.getHeight();
-        int[] histogram = new int[COLORCODE_NUM_BINS]; // Initialize histogram for color codes
+        int[] histogram = new int[COLORCODE_NUM_BINS + 1]; // Initialize histogram for color codes
         histogram[0] = width * height;
 
-        Arrays.fill(histogram, 1, histogram.length, 0); // Filling from index 1
+        Arrays.fill(histogram, 1, histogram.length, 0); // Filling default values of 0
 
 
         // Calculate histogram based on the color code method
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 int rgb = image.getRGB(x, y);
-                // had to google/ask AI for some syntax help to get individual rgb components.
-                int red = (rgb >> 16) & 0xFF;   // Get red component
-                int green = (rgb >> 8) & 0xFF;  // Get green component
-                int blue = rgb & 0xFF;          // Get blue component
+                // extract red, green, and blue values of the pixel
+                int red = (rgb >> 16) & 0xFF;  // Extract the red component
+                int green = (rgb >> 8) & 0xFF; // Extract the green component
+                int blue = rgb & 0xFF;         // Extract the blue component
 
-                // Convert RGB to appropriate histogram bin (adjust this logic based on your bins)
-                int bin = getColorCode(red, green, blue); // Define this method based on your binning strategy
-                if (bin >= 0 && bin < histogram.length) {
-                    // histogram[bin + 1]++;
-                    histogram[bin]++;
-                } else {
-                    System.err.println("Invalid bin index: " + bin + " for RGB: (" + red + ", " + green + ", " + blue + ")");
-                }
+                int red2Bits = red >> 6;    // Reduce red value to 2 bits (0-3)
+                int green2Bits = green >> 6; // Reduce green value to 2 bits (0-3)
+                int blue2Bits = blue >> 6;   // Reduce blue value to 2 bits (0-3)
+
+                // Combine into single color code
+                int colorCode = (red2Bits << 4) | (green2Bits << 2) | blue2Bits;
+
+                histogram[colorCode + 1]++;
             }
+
         }
 
         return histogram;
     }
 
-    public static int getColorCode(int r, int g, int b) {
-        // extract 2 leftmost (most important) bits (MIB)
-        // had to google the syntax for extraction technique
-        int rMIB = (r >> 6) & 0x03; // Shift right by 6 to get the two values
-        int gMIB = (g >> 6) & 0x03;
-        int bMIB = (b >> 6) & 0x03;
-
-        // combine MIBs to a 6-bit value (concatenate)
-        // also had to google syntax for concatenation
-        int colorCode = (rMIB << 4) | (gMIB << 2) | bMIB;
-
-        return colorCode;
-    }
 
     public static double manhattanDistance(int[] histo1, int[] histo2, int numBins) {
         double distance = 0.0;
@@ -103,8 +90,9 @@ public class Histograms {
         double totalPixelsHisto2 = histo2[0];
 
         // for each bin in histogram...
-        for (int i = 0; i < numBins; i++) {
+        for (int i = 1; i <= numBins; i++) {
             // calculate distance between bins (absolute value of the distance) then summation
+            // Asked ChatGPT for some help,
             double normalizedHisto1 = totalPixelsHisto1 > 0 ? (double) histo1[i] / totalPixelsHisto1 : 0;
             double normalizedHisto2 = totalPixelsHisto2 > 0 ? (double) histo2[i] / totalPixelsHisto2 : 0;
 

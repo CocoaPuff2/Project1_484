@@ -231,7 +231,6 @@ public class CBIRSystem extends JFrame {
             return null;
         }
     }
-
     // Sort images based on the calculated histogram distances
     private void sortImages(int[] queryHistogram) {
         // Create a list to hold image paths and their corresponding distances
@@ -258,6 +257,9 @@ public class CBIRSystem extends JFrame {
                 numBins = COLORCODE_NUM_BINS;
             }
 
+
+
+
             // Calculate the Manhattan distance
             double distance = Histograms.manhattanDistance(queryHistogram, imageHistogram, numBins);
             distanceList.add(new AbstractMap.SimpleEntry<>(imagePath, distance));
@@ -276,6 +278,76 @@ public class CBIRSystem extends JFrame {
         currentPage = 0; // Reset to first page
         displayImages();
     }
+
+    /*
+    private void sortImages(int[] queryHistogram) {
+        // Create a HashMap to hold image paths and their corresponding distances
+        HashMap<String, Double> distanceMap = new HashMap<>();
+
+        for (String imagePath : imagePaths) {
+            // Calculate the histogram for the current image
+            BufferedImage image;
+            try {
+                image = ImageIO.read(new File("images/" + imagePath));
+            } catch (Exception e) {
+                e.printStackTrace();
+                continue; // Skip image if there's an error
+            }
+
+            int[] imageHistogram;
+            int numBins;
+
+            if (selectedMethod.equals("Intensity Method")) {
+                imageHistogram = Histograms.intensityMethod(image);
+                numBins = INTENSITY_NUM_BINS;
+            } else {
+                imageHistogram = Histograms.colorCodeMethod(image);
+                numBins = COLORCODE_NUM_BINS;
+            }
+
+            // Calculate the Manhattan distance
+            double distance = Histograms.manhattanDistance(queryHistogram, imageHistogram, numBins);
+            distanceMap.put(imagePath, distance);
+        }
+
+        // Sort the distance map by value using the provided sortByValue method
+        HashMap<String, Double> sortedDistanceMap = sortByValue(distanceMap);
+        // System.out.println("sortedDistanceMap: " + sortedDistanceMap);
+
+        // iterate through sortedDistanceMap hashmap, get image path(key), and dispay it
+
+        for (Map.Entry<String, Double> entry : sortedDistanceMap.entrySet()) {
+            String key = entry.getKey();
+            Double value = entry.getValue();
+            System.out.println("Key: " + key + ", Value: " + value);
+        }
+
+        // Reset the current page and display the sorted images
+        currentPage = 0; // Reset to first page
+        displayImages();
+    }
+
+    private HashMap<String, Double> sortByValue(HashMap<String, Double> hm) {
+        // Create a list from elements of the hashmap
+        List<Map.Entry<String, Double>> distanceList = new LinkedList<>(hm.entrySet());
+
+        // Sort the list
+        Collections.sort(distanceList, new Comparator<Entry<String, Double>>() {
+            @Override
+            public int compare(Entry<String, Double> o1, Entry<String, Double> o2) {
+                return o1.getValue().compareTo(o2.getValue());
+            }
+        });
+
+        // Put data from sorted list into the hashmap
+        HashMap<String, Double> temp = new LinkedHashMap<>();
+        for (Map.Entry<String, Double> aa : distanceList) {
+            temp.put(aa.getKey(), aa.getValue());
+        }
+        return temp;
+    }
+    */
+
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(CBIRSystem::new);
