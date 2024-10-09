@@ -63,9 +63,9 @@ public class Histograms {
             for (int x = 0; x < width; x++) {
                 int rgb = image.getRGB(x, y);
                 // extract red, green, and blue values of the pixel
-                int red = (rgb >> 16) & 0xFF;  // Extract the red component
-                int green = (rgb >> 8) & 0xFF; // Extract the green component
-                int blue = rgb & 0xFF;         // Extract the blue component
+                int red = (rgb >> 16) & 0xFF;  // Extract red component
+                int green = (rgb >> 8) & 0xFF; // Extract green component
+                int blue = rgb & 0xFF;         // Extract blue component
 
                 int red2Bits = red >> 6;    // Reduce red value to 2 bits (0-3)
                 int green2Bits = green >> 6; // Reduce green value to 2 bits (0-3)
@@ -92,7 +92,7 @@ public class Histograms {
         // for each bin in histogram...
         for (int i = 1; i <= numBins; i++) {
             // calculate distance between bins (absolute value of the distance) then summation
-            // Asked ChatGPT for some help,
+            // Asked ChatGPT for some help in terms of the syntax on how to normalize a histogram
             double normalizedHisto1 = totalPixelsHisto1 > 0 ? (double) histo1[i] / totalPixelsHisto1 : 0;
             double normalizedHisto2 = totalPixelsHisto2 > 0 ? (double) histo2[i] / totalPixelsHisto2 : 0;
 
