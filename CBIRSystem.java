@@ -6,10 +6,9 @@ import javax.imageio.ImageIO;
 import java.io.File;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
-// import java.util.HashMap;
-import java.util.List;
-// import java.util.Map;
 import java.util.*;
+import java.util.List;
+import java.util.Map.Entry;
 
 public class CBIRSystem extends JFrame {
     private Map<String, int[]> histograms = new HashMap<>();
@@ -40,16 +39,32 @@ public class CBIRSystem extends JFrame {
         mainPanel.setLayout(new BorderLayout());
         add(mainPanel, BorderLayout.CENTER);
 
-        // Create dropdown menu for method selection (intensity or color code)
+        // Create button panel for method selection
         JPanel methodPanel = new JPanel();
-        String[] methods = {"Intensity Method", "Color Code Method"};
-        JComboBox<String> methodComboBox = new JComboBox<>(methods);
-        methodComboBox.setFont(new Font("Serif", Font.BOLD, 18));
-        methodComboBox.addActionListener(e -> {
-            selectedMethod = (String) methodComboBox.getSelectedItem(); // Update the selected method
+        JButton intensityButton = new JButton("Intensity Method");
+        JButton colorCodeButton = new JButton("Color Code Method");
+
+        intensityButton.addActionListener(e -> {
+            selectedMethod = "Intensity Method"; // Update  selected method
+            if (queryImage != null) { // Is there a selected image?
+                int[] histogram = Histograms.intensityMethod(queryImage);
+                histograms.put(imagePaths[currentPage * IMAGES_PER_PAGE], histogram); // Store histogram for the first image (modify as needed)
+                sortImages(histogram); // Sort images (based on the new histogram)
+            }
         });
-        methodPanel.add(methodComboBox); // add dropdown
-        mainPanel.add(methodPanel, BorderLayout.NORTH); // add method panel to main panel
+
+        colorCodeButton.addActionListener(e -> {
+            selectedMethod = "Color Code Method"; // Update the selected method
+            if (queryImage != null) { // Check if there is a selected image
+                int[] histogram = Histograms.colorCodeMethod(queryImage);
+                histograms.put(imagePaths[currentPage * IMAGES_PER_PAGE], histogram); // Store histogram for the first image (modify as needed)
+                sortImages(histogram); // Sort images based on the new histogram
+            }
+        });
+
+        methodPanel.add(intensityButton);
+        methodPanel.add(colorCodeButton);
+        mainPanel.add(methodPanel, BorderLayout.NORTH); // Add method panel to main panel
 
         // Load images from the "images" directory
         loadImages();
@@ -177,17 +192,16 @@ public class CBIRSystem extends JFrame {
                         int[] histogram;
                         if (selectedMethod.equals("Intensity Method")) {
                             histogram = Histograms.intensityMethod(queryImage);
-                            System.out.println("Intensity Histogram: " + Arrays.toString(histogram));
-
-                        } else {
+                        } else if (selectedMethod.equals("Color Code Method")){
                             histogram = Histograms.colorCodeMethod(queryImage);
-                            System.out.println("CC Histogram: " + Arrays.toString(histogram));
-
+                        } else {
+                            return;
                         }
 
                         // Store the histogram of the query image
                         histograms.put(imagePath, histogram);
-                        // Sort the images based on distance from the query image
+
+                        // Sort images based on the query image's histogram
                         sortImages(histogram);
 
                     } catch (Exception ex) {
@@ -202,23 +216,35 @@ public class CBIRSystem extends JFrame {
             imageGridPanel.add(imagePanel); // Add the image panel to the grid
         }
 
-        imageGridPanel.revalidate(); // Refresh grid panel
-        imageGridPanel.repaint();
+        imageGridPanel.revalidate(); // Refresh the grid
+        imageGridPanel.repaint(); // Repaint the grid
     }
 
-    // Sort DISTANCE array and then reload grid images
+    // Resize image to specified width and height
+    private ImageIcon resizeImage(String path, int width, int height) {
+        try {
+            BufferedImage img = ImageIO.read(new File(path));
+            Image scaledImg = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+            return new ImageIcon(scaledImg);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    // Sort images based on the calculated histogram distances
     private void sortImages(int[] queryHistogram) {
-        // Create a map to hold image paths and their corresponding distances
-        Map<String, Double> distanceMap = new HashMap<>();
+        // Create a list to hold image paths and their corresponding distances
+        List<Map.Entry<String, Double>> distanceList = new ArrayList<>();
 
         for (String imagePath : imagePaths) {
             // Calculate the histogram for the current image
-            BufferedImage image = null;
+            BufferedImage image;
             try {
                 image = ImageIO.read(new File("images/" + imagePath));
             } catch (Exception e) {
                 e.printStackTrace();
-                continue; // Skip this image if there's an error
+                continue; // Skip image if there's an error
             }
 
             int[] imageHistogram;
@@ -234,32 +260,24 @@ public class CBIRSystem extends JFrame {
 
             // Calculate the Manhattan distance
             double distance = Histograms.manhattanDistance(queryHistogram, imageHistogram, numBins);
-            distanceMap.put(imagePath, distance);
+            distanceList.add(new AbstractMap.SimpleEntry<>(imagePath, distance));
+
         }
 
-        // Sort the images by distance
-        List<Map.Entry<String, Double>> sortedEntries = new ArrayList<>(distanceMap.entrySet());
-        sortedEntries.sort(Map.Entry.comparingByValue()); // Sort by distance
+        // Sort the list by distance
+        distanceList.sort(Entry.comparingByValue());
 
         // Update imagePaths to reflect the sorted order
-        imagePaths = new String[sortedEntries.size()];
-        for (int i = 0; i < sortedEntries.size(); i++) {
-            imagePaths[i] = sortedEntries.get(i).getKey();
-        }
+        imagePaths = distanceList.stream()
+                .map(Entry::getKey)
+                .toArray(String[]::new);
 
-        // Redisplay the images in the grid based on the new sorted order
+        // Reset the current page and display the sorted images
+        currentPage = 0; // Reset to first page
         displayImages();
     }
 
-    // Method that resizes images while maintaining aspect ratio
-    private Icon resizeImage(String imagePath, int width, int height) {
-        ImageIcon icon = new ImageIcon(imagePath);
-        Image img = icon.getImage(); // Get the original image
-        Image scaledImg = img.getScaledInstance(width, height, Image.SCALE_SMOOTH); // Scale the image
-        return new ImageIcon(scaledImg); // Return the resized image as an Icon
-    }
-
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(CBIRSystem::new); // Start the application
+        SwingUtilities.invokeLater(CBIRSystem::new);
     }
 }

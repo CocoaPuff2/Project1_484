@@ -63,6 +63,7 @@ public class Histograms {
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 int rgb = image.getRGB(x, y);
+                // had to google/ask AI for some syntax help to get individual rgb components.
                 int red = (rgb >> 16) & 0xFF;   // Get red component
                 int green = (rgb >> 8) & 0xFF;  // Get green component
                 int blue = rgb & 0xFF;          // Get blue component
