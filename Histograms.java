@@ -82,6 +82,65 @@ public class Histograms {
         return histogram;
     }
 
+    // PART 1: Assign 2 (a, c)
+    public static double[][] createFeatureMatrixA(BufferedImage[] images) {
+        double[][] featureMatrixA = new double[images.length][INTENSITY_NUM_BINS]; // Create matrix for (Intensity method)
+
+        for (int i = 0; i < images.length; i++) {
+            // create HistoA
+            int[] intensityHistogram = intensityMethod(images[i]); // Get histogram for the image
+            double totalPixels = intensityHistogram[0];
+
+            // Get features from HistoA (each (histogram) count value of an image  / size of that image).
+            /*
+            for (int j = 1; <= INTENSITY_NUM_BINS; j++) {
+                = / totalPixels;
+
+            }
+             */
+            // Normalize the histogram and store in the feature matrix
+            for (int j = 1; j <= INTENSITY_NUM_BINS; j++) {
+                featureMatrixA[i][j - 1] = (totalPixels > 0) ? (double) intensityHistogram[j] / totalPixels : 0;
+            }
+        }
+
+        return featureMatrixA;
+    }
+
+    // Part 1: Assign 2 (b, c)
+    public static double[][] createFeatureMatrixB(BufferedImage[] images) {
+        double[][] featureMatrixB = new double[images.length][COLORCODE_NUM_BINS]; // Create matrix for (CC method)
+
+        for (int i = 0; i < images.length; i++) {
+            // Create HistoB
+            int[] colorcodeHistogram = colorCodeMethod(images[i]);
+            double totalPixels = colorcodeHistogram[0];
+
+            // Normalize the histogram and store in the feature matrix
+            for (int j = 1; j <= COLORCODE_NUM_BINS; j++) {
+                featureMatrixB[i][j - 1] = (totalPixels > 0) ? (double) colorcodeHistogram[j] / totalPixels : 0;
+            }
+        }
+
+        return featureMatrixB;
+    }
+
+    // Part 1: Assign 2 (d) --> Combine Vector/Matrices A and B to get FA Feature Vector
+    public static double[][] createFAFeatureMatrix(BufferedImage[] images) {
+        double[][] featureMatrixA = createFeatureMatrixA(images); // (Intensity) Matrix
+        double[][] featureMatrixB = createFeatureMatrixB(images); // (CC) Matrix
+
+        // Combined features of (INT) and (CC) -->  (100 x 89)
+        double[][] FAFeatureMatrix = new double[images.length][INTENSITY_NUM_BINS + COLORCODE_NUM_BINS];
+
+        // for every image, copy over values from  Matrices A and B
+        for (int i = 0; i < images.length; i++) {
+            System.arraycopy(featureMatrixA[i], 0, FAFeatureMatrix[i], 0, INTENSITY_NUM_BINS); // Copy A values
+            System.arraycopy(featureMatrixB[i], 0, FAFeatureMatrix[i], INTENSITY_NUM_BINS, COLORCODE_NUM_BINS); // Copy B values
+        }
+
+        return FAFeatureMatrix; // combined feature matrix (100 x 89)
+    }
 
     public static double manhattanDistance(int[] histo1, int[] histo2, int numBins) {
         double distance = 0.0;
