@@ -159,4 +159,12 @@ public class Histograms {
         }
         return distance;
     }
+
+    // Part 4: (i) Weighted Manhattan Distance
+    public static double weightedManhattanDistance(int[] histo1, int[] histo2, int numBins) {
+        double distance = 0.0;
+
+
+        return distance;
+    }
 }

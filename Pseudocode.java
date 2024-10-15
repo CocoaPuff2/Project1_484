@@ -1,5 +1,5 @@
-public class RelativeFeedback {
-    /* Pseudocode for Assignment 2:
+public class Pseudocode {
+      /* Pseudocode for Assignment 2:
 
     GOAL 1: Intensity + Color Code method
     GOAL 2: RF (link high level concepts w/ low level features)
@@ -37,6 +37,4 @@ public class RelativeFeedback {
             3. Normalized Weight = (initial weight) / summation of ALL weights
 
      */
-
-
 }
