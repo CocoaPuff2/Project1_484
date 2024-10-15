@@ -1,7 +1,7 @@
 public class Normalization {
+
     // PART 2: Assign 2 (e) Feature Normalization
     public double[][] normalizeFeatures(double[][] featureMatrix) {
-        // get averages of each value in the FAFeatureMatrix
         int numRows = featureMatrix.length; // total # images
         int numCols = featureMatrix[0].length; // total # of features
         double[][] normalizedMatrix = new double[numRows][numCols];
@@ -10,7 +10,7 @@ public class Normalization {
         double[] averages = new double[numCols];
         double[] stdDevs = new double[numCols];
 
-        // (e) Calculate averages
+        // (e) Calculate averages of each value in the FAFeatureMatrix
         for (int j = 0; j < numCols; j++) {
             double sum = 0;
             for (int i = 0; i < numRows; i++) {
@@ -19,7 +19,7 @@ public class Normalization {
             averages[j] = sum / numRows;
         }
 
-        // (f) Calculate standard deviations (STDEV)
+        // (f) Calculate standard deviations (STDEV) in FAFeature vector
         for (int j = 0; j < numCols; j++) {
             double sumSquaredDiffs = 0;
             for (int i = 0; i < numRows; i++) {
@@ -40,46 +40,26 @@ public class Normalization {
 
          */
 
-        return normalizedMatrix; // Return the normalized feature matrix
+        return new double[][]{averages, stdDevs};  // Return the normalized feature matrix
     }
 
 
     // PART 3: GAUSSIAN NORMALIZATION
-    // (value - average / STDEV)
-    //  Values are the values from the FA Feature Vector
-    public static double[][] gaussianNormalization(double[][] featureMatrix) {
-        int numRows = featureMatrix.length; // total images
-        int numCols = featureMatrix[0].length; // total number of features
-        double[][] normalizedMatrix = new double[numRows][numCols];
+    public static double[][] gaussianNormalization(double[][] featureMatrix, double[] averages, double[] stdDevs) {
+        int numImages = featureMatrix.length; // total images
+        int numFeatures = featureMatrix[0].length; // total number of features
 
-        for (int j = 0; j < numCols; j++) {
-            double sum = 0;
-            double sumSq = 0;
+        // ** Will use this matrix from now on **
+        double[][] GNnormalizedMatrix = new double[numImages][numFeatures];
 
-            // 1. Calculate the average
-            for (int i = 0; i < numRows; i++) {
-                sum += featureMatrix[i][j];
-            }
-            double average = sum / numRows;
-
-            // 2. Calculate the variance
-            for (int i = 0; i < numRows; i++) {
-                double diff = featureMatrix[i][j] - average;
-                sumSq += diff * diff; // Squared difference
-            }
-            double variance = sumSq / (numRows - 1); // Sample variance
-            double stdev = Math.sqrt(variance); // Standard deviation
-
-            // 3. Normalize the feature values
-            for (int i = 0; i < numRows; i++) {
-                if (stdev != 0) { // Avoid division by zero
-                    double normalizedValue = (featureMatrix[i][j] - average) / stdev; // Gaussian normalization
-                    normalizedMatrix[i][j] = normalizedValue;
-                } else {
-                    normalizedMatrix[i][j] = 0; // or you could choose to retain the original value
-                }
+        // (value - average / STDEV) --> Values are the values from the FA Feature Vector
+        for (int i = 0; i < numImages; i++) {
+            for (int j = 0; j < numFeatures; j++) {
+               //  (value - average / STDEV)
+               GNnormalizedMatrix[i][j] = (featureMatrix[i][j] - averages[j]) / stdDevs[j];
             }
         }
-        return normalizedMatrix;
+
+        return GNnormalizedMatrix;
     }
 }
