@@ -74,7 +74,17 @@ public class CBIRSystem extends JFrame {
                     histograms.put(imagePaths[currentPage * IMAGES_PER_PAGE], histogram);
                     sortImages(histogram);
                 } else if (selectedMethod.equals("Intensity + Color Code Method")) {
-                    // processCombinedMethod();
+                    // Calculate intensity histogram
+                    int[] intensityHistogram = Histograms.intensityMethod(queryImage);
+                    histograms.put(imagePaths[currentPage * IMAGES_PER_PAGE], intensityHistogram);
+
+                    // Calculate color code histogram
+                    int[] colorCodeHistogram = Histograms.colorCodeMethod(queryImage);
+                    histograms.put(imagePaths[currentPage * IMAGES_PER_PAGE], colorCodeHistogram);
+
+                    // Now, we can sort the images based on a combined method
+                    // Combine histograms logic - can average or calculate distances based on both
+                    sortImagesCombined(intensityHistogram, colorCodeHistogram);
                 }
             }
         });
@@ -150,6 +160,39 @@ public class CBIRSystem extends JFrame {
 
         displayImages();
         setVisible(true);
+    }
+
+    // Assign 2: (Part ???) calculate distances for both methods & sort  images based on the combined distances
+    private void sortImagesCombined(int[] intensityHistogram, int[] colorCodeHistogram) {
+        List<Map.Entry<String, Double>> distanceList = new ArrayList<>();
+
+        for (String imagePath : imagePaths) {
+            BufferedImage image;
+            try {
+                image = ImageIO.read(new File("images/" + imagePath));
+            } catch (Exception e) {
+                e.printStackTrace();
+                continue;
+            }
+
+            // Calculate histograms for the current image
+            int[] imageIntensityHistogram = Histograms.intensityMethod(image);
+            int[] imageColorCodeHistogram = Histograms.colorCodeMethod(image);
+
+            // Calculate distances for both histograms
+            double intensityDistance = Histograms.manhattanDistance(intensityHistogram, imageIntensityHistogram, Histograms.INTENSITY_NUM_BINS);
+            double colorCodeDistance = Histograms.manhattanDistance(colorCodeHistogram, imageColorCodeHistogram, Histograms.COLORCODE_NUM_BINS);
+
+            // Combine distances (you can adjust the combination method)
+            double combinedDistance = intensityDistance + colorCodeDistance; // Example: summing distances
+
+            distanceList.add(new AbstractMap.SimpleEntry<>(imagePath, combinedDistance));
+        }
+
+        // Sort the list based on the combined distance
+        distanceList.sort(Entry.comparingByValue());
+        imagePaths = distanceList.stream().map(Entry::getKey).toArray(String[]::new);
+        displayImages();
     }
 
     private void loadImages() {

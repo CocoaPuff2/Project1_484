@@ -30,15 +30,43 @@ public class Pseudocode {
             ** Use this GN matrix for RF **
 
    Part 4:
-        h. Initial weight: 1 / N (N is the number of columns)
-        i. Weighted Manhattan Distance: D(i, j): ∑ Wi | fi(i)  +  fj(j) |
-                    where  Wi =  1 / N. Initially, N = 89 for Assign 2. N here is the # of features
-        j. Enable users to pick relevant images. Get rows from GN and extract x rows
-            ex: x (3) relevant images? -->  Extract the x (3) images rows so it’s (3 x 89).
-        k. Recompute weights:
+        h. Initial weight: 1 / N (N is the number of columns) (1/89)
+
+        i. Weighted Manhattan Distance: D(i, j): ∑ Wi * | fi(i)  -  fj(j) |
+                    where  Wi =  1 / N. Initially, N = 89 for Assign 2.
+                    N here is the # of features
+
+        j. Enable users to pick relevant images.
+            Get/extract rows from GN Feature Matrix for the relevant images the user picked
+            into SubFeatureMatrix
+           ex: 3 relevant images? -->  Extract the 3 images rows so it’s (3 x 89).
+
+            Which feature more important? Which cols have the smallest variance
+            (**Do STDEV based on SubFeatureMatrix)
+
+        k. Recompute weights: (**Do STDEV based on SubFeatureMatrix)
+
             1. Calculate STDEV of each col
-            2. Initial Weight = 1 / STDEV for each col
-            3. Normalized Weight = (initial weight) / summation of ALL weights
+            2. Initial (Updated) Weight = 1 / STDEV for each col
+
+                IF STDEV = 0
+                    IF mean is NOT 0 --> 0.5 × min(non-zero standard deviations);
+                    If mean IS 0 --> Weight = 0
+
+                if STDEV smaller --> HIGHER WEIGHT
+                if STDEV bigger --> LOWER WEIGHT
+
+            3. Normalized Weight = (updated weight) / summation of ALL weights
+             ****** do we do WMD with the GNMatrix or the relevant images? ******
+                --> NOW use this weight for the WeigthedMD: (Steps i-k repeated)
+                    D(i, j): ∑ Wi * | fi(i) - fj(j) |
+                    where  Wi =  Normalized Weight
+
+    ---> if user doesn't pick as relevant, there is no weight (0)
+
+
+
      */
+
 
 }

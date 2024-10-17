@@ -84,20 +84,13 @@ public class Histograms {
 
     // PART 1: Assign 2 (a, c)
     public static double[][] createFeatureMatrixA(BufferedImage[] images) {
-        double[][] featureMatrixA = new double[images.length][INTENSITY_NUM_BINS]; // Create matrix for (Intensity method)
+        double[][] featureMatrixA = new double[images.length][INTENSITY_NUM_BINS + 1]; // Create matrix for (Intensity method)
 
         for (int i = 0; i < images.length; i++) {
             // create HistoA
             int[] intensityHistogram = intensityMethod(images[i]); // Get histogram for the image
             double totalPixels = intensityHistogram[0];
 
-            // Get features from HistoA (each (histogram) count value of an image  / size of that image).
-            /*
-            for (int j = 1; <= INTENSITY_NUM_BINS; j++) {
-                = / totalPixels;
-
-            }
-             */
             // Normalize the histogram and store in the feature matrix
             for (int j = 1; j <= INTENSITY_NUM_BINS; j++) {
                 featureMatrixA[i][j - 1] = (totalPixels > 0) ? (double) intensityHistogram[j] / totalPixels : 0;
