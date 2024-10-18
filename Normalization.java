@@ -45,11 +45,30 @@ public class Normalization {
         // ** Will use this matrix from now on **
         double[][] GNnormalizedMatrix = new double[numImages][numFeatures];
 
+        // edge case
+        double minNonZeroStdDev = Double.MAX_VALUE;
+        for (double stdDev : stdDevs) {
+            if (stdDev > 0 && stdDev < minNonZeroStdDev) {
+                minNonZeroStdDev = stdDev;
+            }
+        }
+
         // (value - average / STDEV) --> Values are the values from the FA Feature Vector
         for (int i = 0; i < numImages; i++) {
             for (int j = 0; j < numFeatures; j++) {
-               //  (value - average / STDEV)
-               GNnormalizedMatrix[i][j] = (featureMatrix[i][j] - averages[j]) / stdDevs[j];
+                if (stdDevs[j] == 0) {
+                    // Handle edge case based on the value of the mean
+                    if (averages[j] != 0) {
+                        // If mean is NOT 0
+                        GNnormalizedMatrix[i][j] = 0.5 * minNonZeroStdDev;
+                    } else {
+                        // If mean IS 0
+                        GNnormalizedMatrix[i][j] = 0; // Weight = 0
+                    }
+                } else {
+                    // Normal case
+                    GNnormalizedMatrix[i][j] = (featureMatrix[i][j] - averages[j]) / stdDevs[j];
+                }
             }
         }
 

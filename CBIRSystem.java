@@ -121,20 +121,49 @@ public class CBIRSystem extends JFrame {
                     System.out.println();
 
                      */
+
                     double[][] GNnormalizedMatrix = Normalization.gaussianNormalization(FAFeatureMatrix, averages, stdDevs);
 
                     // TODO: Note, GN method may need adjustments
-                    /*
+
                     System.out.println("GNnormalizedMatrix:");
                     for (int i = 0; i < GNnormalizedMatrix.length; i++) {
-                        System.out.print("Image " + (i + 1)); // Image numbering starts from 1
+                        // Extract the filename from the image path
+                        String imageName = new File(imagePaths[i]).getName(); // Get the filename from the path
+                        System.out.print("Image: " + imageName); // Display the image name
                         for (int j = 0; j < GNnormalizedMatrix[i].length; j++) {
-                            System.out.printf(" %.9f", GNnormalizedMatrix[i][j]); // Adjusted format to show more decimal places
+                            System.out.printf(" %.9f", GNnormalizedMatrix[i][j]); // Show normalized values
                         }
                         System.out.println(); // Move to the next line after each image
                     }
 
-                     */
+                    double[] initialWeights = RelativeFeedback.calculateInitialWeights(GNnormalizedMatrix[0].length);
+
+                    // create an array with image index and image path
+                    String[][] imageIndexAndPath = new String[imagePaths.length][2]; // 2D array for image index and path
+
+                    for (int i = 0; i < imagePaths.length; i++) {
+                        imageIndexAndPath[i][0] = String.valueOf(i + 1); // Store index starting from 1
+                        imageIndexAndPath[i][1] = imagePaths[i]; // Store the corresponding image path
+                    }
+
+                    List<Map.Entry<String, Double>> distanceList = new ArrayList<>();
+
+                    StringBuilder resultBuilder = new StringBuilder();
+                    for (int i = 0; i < GNnormalizedMatrix.length; i++) {
+                        // double distance = RelativeFeedback.weightedManhattanDistance(GNnormalizedMatrix[queryImageIndex], GNnormalizedMatrix[i], initialWeights);
+
+                        // Change index to be the index of the query image
+                        // put this distance into the arraylist (same as before)
+                        // distanceList.add(new AbstractMap.SimpleEntry<>(imagePaths[i], distance));
+                        // resultBuilder.append(String.format("Distance between Image 1 and Image %d: %.4f%n", i + 1, distance));
+                    }
+                    Collections.sort(distanceList, Comparator.comparingDouble(Map.Entry::getValue));
+
+
+                    // todo: delete later (PS)
+                    System.out.println(resultBuilder.toString());
+
                 }
             }
         });
@@ -326,6 +355,7 @@ public class CBIRSystem extends JFrame {
             int[] imageHistogram;
             int numBins;
 
+            // todo add new method here (?)
             if (selectedMethod.equals("Intensity Method")) {
                 imageHistogram = Histograms.intensityMethod(image);
                 numBins = INTENSITY_NUM_BINS;
