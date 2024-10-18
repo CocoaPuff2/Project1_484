@@ -43,7 +43,7 @@ public class RelativeFeedback {
         double[] updatedWeights = new double[numFeatures];
         double totalWeight = 0.0;
 
-        // Calculate standard deviation for each column
+        //  standard deviation for each column
         for (int j = 0; j < numFeatures; j++) {
             double mean = 0.0;
             for (int i = 0; i < subFeatureMatrix.length; i++) {

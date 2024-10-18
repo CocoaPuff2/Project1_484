@@ -83,6 +83,8 @@ public class Histograms {
     }
 
     // PART 1: Assign 2 (a, c)
+    // (Get intensity method result and put into a histogram. Then, get the features from the histogram
+    // (each histogram count value of an image  / size of that image) and put into Feature Vector/Matrix A
     public static double[][] createFeatureMatrixA(BufferedImage[] images) {
         double[][] featureMatrixA = new double[images.length][INTENSITY_NUM_BINS + 1]; // Create matrix for (Intensity method)
 
@@ -101,6 +103,8 @@ public class Histograms {
     }
 
     // Part 1: Assign 2 (b, c)
+    // (Get colorcode method result and put into a histogram. Then, get the features from the histogram
+    // (each histogram count value of an image  / size of that image) and put into Feature Vector/Matrix B
     public static double[][] createFeatureMatrixB(BufferedImage[] images) {
         double[][] featureMatrixB = new double[images.length][COLORCODE_NUM_BINS]; // Create matrix for (CC method)
 

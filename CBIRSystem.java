@@ -6,6 +6,7 @@ import javax.imageio.ImageIO;
 import java.io.File;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
+import java.io.IOException;
 import java.util.*;
 import java.util.List;
 import java.util.Map.Entry;
@@ -74,17 +75,66 @@ public class CBIRSystem extends JFrame {
                     histograms.put(imagePaths[currentPage * IMAGES_PER_PAGE], histogram);
                     sortImages(histogram);
                 } else if (selectedMethod.equals("Intensity + Color Code Method")) {
-                    // Calculate intensity histogram
-                    int[] intensityHistogram = Histograms.intensityMethod(queryImage);
-                    histograms.put(imagePaths[currentPage * IMAGES_PER_PAGE], intensityHistogram);
+                    BufferedImage[] allImages = new BufferedImage[imagePaths.length];
 
-                    // Calculate color code histogram
-                    int[] colorCodeHistogram = Histograms.colorCodeMethod(queryImage);
-                    histograms.put(imagePaths[currentPage * IMAGES_PER_PAGE], colorCodeHistogram);
+                    for (int i = 0; i < imagePaths.length; i++) {
+                        try {
+                            allImages[i] = ImageIO.read(new File("images/" + imagePaths[i]));
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
 
-                    // Now, we can sort the images based on a combined method
-                    // Combine histograms logic - can average or calculate distances based on both
-                    sortImagesCombined(intensityHistogram, colorCodeHistogram);
+                    double[][] FAFeatureMatrix = Histograms.createFAFeatureMatrix(allImages);
+
+                    // todo:  delete later
+                    /*
+                    System.out.println("FAFeatureMatrix:");
+                    for (int i = 0; i < FAFeatureMatrix.length; i++) {
+                        for (int j = 0; j < FAFeatureMatrix[i].length; j++) {
+                            System.out.printf("%.4f ", FAFeatureMatrix[i][j]);
+                        }
+                        System.out.println();
+                    }
+
+                     */
+
+                    // Part 2: Normalization:
+                    // e. averages
+                    // f. STDEV
+                    Normalization normalization = new Normalization();
+                    double[] averages = normalization.calculateAverages(FAFeatureMatrix);
+                    double[] stdDevs = normalization.calculateStandardDeviations(FAFeatureMatrix, averages);
+
+                    /*
+                    System.out.println("Averages:");
+                    for (double avg : averages) {
+                        System.out.printf("%.4f ", avg);
+                    }
+                    System.out.println();
+
+                    // Print standard deviations
+                    System.out.println("Standard Deviations:");
+                    for (double stdDev : stdDevs) {
+                        System.out.printf("%.4f ", stdDev);
+                    }
+                    System.out.println();
+
+                     */
+                    double[][] GNnormalizedMatrix = Normalization.gaussianNormalization(FAFeatureMatrix, averages, stdDevs);
+
+                    // TODO: Note, GN method may need adjustments
+                    /*
+                    System.out.println("GNnormalizedMatrix:");
+                    for (int i = 0; i < GNnormalizedMatrix.length; i++) {
+                        System.out.print("Image " + (i + 1)); // Image numbering starts from 1
+                        for (int j = 0; j < GNnormalizedMatrix[i].length; j++) {
+                            System.out.printf(" %.9f", GNnormalizedMatrix[i][j]); // Adjusted format to show more decimal places
+                        }
+                        System.out.println(); // Move to the next line after each image
+                    }
+
+                     */
                 }
             }
         });
