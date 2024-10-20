@@ -75,8 +75,10 @@ public class CBIRSystem extends JFrame {
                     histograms.put(imagePaths[currentPage * IMAGES_PER_PAGE], histogram);
                     sortImages(histogram);
                 } else if (selectedMethod.equals("Intensity + Color Code Method")) {
+                    // loads all the images
                     BufferedImage[] allImages = new BufferedImage[imagePaths.length];
 
+                    //
                     for (int i = 0; i < imagePaths.length; i++) {
                         try {
                             allImages[i] = ImageIO.read(new File("images/" + imagePaths[i]));
@@ -99,7 +101,7 @@ public class CBIRSystem extends JFrame {
 
                      */
 
-                    // Part 2: Normalization:
+                    // Part 2: Normalization: (of the FAFeatureMatrix)
                     // e. averages
                     // f. STDEV
                     Normalization normalization = new Normalization();
@@ -127,42 +129,42 @@ public class CBIRSystem extends JFrame {
                     // TODO: Note, GN method may need adjustments
 
                     System.out.println("GNnormalizedMatrix:");
-                    for (int i = 0; i < GNnormalizedMatrix.length; i++) {
-                        // Extract the filename from the image path
-                        String imageName = new File(imagePaths[i]).getName(); // Get the filename from the path
-                        System.out.print("Image: " + imageName); // Display the image name
-                        for (int j = 0; j < GNnormalizedMatrix[i].length; j++) {
-                            System.out.printf(" %.9f", GNnormalizedMatrix[i][j]); // Show normalized values
-                        }
-                        System.out.println(); // Move to the next line after each image
-                    }
 
+
+                    // initialize weights for weighted Manhattan distance calculation
                     double[] initialWeights = RelativeFeedback.calculateInitialWeights(GNnormalizedMatrix[0].length);
 
                     // create an array with image index and image path
                     String[][] imageIndexAndPath = new String[imagePaths.length][2]; // 2D array for image index and path
-
                     for (int i = 0; i < imagePaths.length; i++) {
                         imageIndexAndPath[i][0] = String.valueOf(i + 1); // Store index starting from 1
-                        imageIndexAndPath[i][1] = imagePaths[i]; // Store the corresponding image path
+                        imageIndexAndPath[i][1] = imagePaths[i];         // Store the corresponding image path
                     }
 
                     List<Map.Entry<String, Double>> distanceList = new ArrayList<>();
+                    int queryImageIndex = 0;
 
-                    StringBuilder resultBuilder = new StringBuilder();
                     for (int i = 0; i < GNnormalizedMatrix.length; i++) {
-                        // double distance = RelativeFeedback.weightedManhattanDistance(GNnormalizedMatrix[queryImageIndex], GNnormalizedMatrix[i], initialWeights);
+                        // Calculate the weighted Manhattan distance between the query image and the current image
+                        double distance = RelativeFeedback.weightedManhattanDistance(
+                                GNnormalizedMatrix[queryImageIndex], // The query image (assumed to be the first)
+                                GNnormalizedMatrix[i],               // The current image being compared
+                                initialWeights                       // Initial weights for each feature
+                        );
 
-                        // Change index to be the index of the query image
-                        // put this distance into the arraylist (same as before)
-                        // distanceList.add(new AbstractMap.SimpleEntry<>(imagePaths[i], distance));
-                        // resultBuilder.append(String.format("Distance between Image 1 and Image %d: %.4f%n", i + 1, distance));
+                        // Add the image path and distance to the distanceList
+                        distanceList.add(new AbstractMap.SimpleEntry<>(imagePaths[i], distance));
                     }
-                    Collections.sort(distanceList, Comparator.comparingDouble(Map.Entry::getValue));
+
+                    // Sort the distance list by the computed distances (ascending order)
+                    distanceList.sort(Comparator.comparingDouble(Map.Entry::getValue));
+
+                    // Update the imagePaths to reflect the new sorted order based on similarity (closest to query image first)
+                    imagePaths = distanceList.stream().map(Map.Entry::getKey).toArray(String[]::new);
 
 
-                    // todo: delete later (PS)
-                    System.out.println(resultBuilder.toString());
+                    // Display the images in the new order of similarity
+                    displayImages();
 
                 }
             }
