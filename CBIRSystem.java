@@ -134,6 +134,24 @@ public class CBIRSystem extends JFrame {
                     // initialize weights for weighted Manhattan distance calculation
                     double[] initialWeights = RelativeFeedback.calculateInitialWeights(GNnormalizedMatrix[0].length);
 
+                    // check if relevance feedback is enabled
+                    if (relevanceCheckbox.isSelected()) {
+                        List<Integer> selectedIndices = new ArrayList<>();
+                        for (int i = 0; i < imageCheckboxes.size(); i++) {
+                            if (imageCheckboxes.get(i).isSelected()) {
+                                selectedIndices.add(currentPage * IMAGES_PER_PAGE + i);
+                            }
+                        }
+
+                        // extract the relevant images
+                        double [][] subFeatureMatrix = RelativeFeedback.extractRelevantImages(GNnormalizedMatrix, selectedIndices.stream().mapToInt(i -> i).toArray());
+
+                        // Recompute weights based on the relevant images
+                        initialWeights = RelativeFeedback.recomputeWeights(subFeatureMatrix);
+
+
+                    }
+
                     // create an array with image index and image path
                     String[][] imageIndexAndPath = new String[imagePaths.length][2]; // 2D array for image index and path
                     for (int i = 0; i < imagePaths.length; i++) {
@@ -243,39 +261,6 @@ public class CBIRSystem extends JFrame {
         setVisible(true);
     }
 
-    // Assign 2: (Part ???) calculate distances for both methods & sort  images based on the combined distances
-    private void sortImagesCombined(int[] intensityHistogram, int[] colorCodeHistogram) {
-        List<Map.Entry<String, Double>> distanceList = new ArrayList<>();
-
-        for (String imagePath : imagePaths) {
-            BufferedImage image;
-            try {
-                image = ImageIO.read(new File("images/" + imagePath));
-            } catch (Exception e) {
-                e.printStackTrace();
-                continue;
-            }
-
-            // Calculate histograms for the current image
-            int[] imageIntensityHistogram = Histograms.intensityMethod(image);
-            int[] imageColorCodeHistogram = Histograms.colorCodeMethod(image);
-
-            // Calculate distances for both histograms
-            double intensityDistance = Histograms.manhattanDistance(intensityHistogram, imageIntensityHistogram, Histograms.INTENSITY_NUM_BINS);
-            double colorCodeDistance = Histograms.manhattanDistance(colorCodeHistogram, imageColorCodeHistogram, Histograms.COLORCODE_NUM_BINS);
-
-            // Combine distances (you can adjust the combination method)
-            double combinedDistance = intensityDistance + colorCodeDistance; // Example: summing distances
-
-            distanceList.add(new AbstractMap.SimpleEntry<>(imagePath, combinedDistance));
-        }
-
-        // Sort the list based on the combined distance
-        distanceList.sort(Entry.comparingByValue());
-        imagePaths = distanceList.stream().map(Entry::getKey).toArray(String[]::new);
-        displayImages();
-    }
-
     private void loadImages() {
         File imagesDir = new File("images");
         if (imagesDir.exists() && imagesDir.isDirectory()) {
@@ -284,8 +269,10 @@ public class CBIRSystem extends JFrame {
     }
 
     private void displayImages() {
+        // cleanup for previous images and checkboxes
         imageGridPanel.removeAll();
         imageCheckboxes.clear();
+
         int startIndex = currentPage * IMAGES_PER_PAGE;
         int endIndex = Math.min(startIndex + IMAGES_PER_PAGE, imagePaths.length);
 
@@ -296,12 +283,14 @@ public class CBIRSystem extends JFrame {
             imagePanel.setLayout(new BoxLayout(imagePanel, BoxLayout.Y_AXIS));
             imagePanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 
+            // image with filename
             JLabel imageLabel = new JLabel(resizeImage("images/" + imagePaths[i], 80, 80));
             imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
             JLabel filenameLabel = new JLabel(imagePaths[i]);
             filenameLabel.setHorizontalAlignment(SwingConstants.CENTER);
             filenameLabel.setFont(new Font("Serif", Font.PLAIN, 10));
 
+            // mouseclick events for the query image
             final String imagePath = imagePaths[i];
             imageLabel.addMouseListener(new MouseAdapter() {
                 @Override
@@ -315,9 +304,11 @@ public class CBIRSystem extends JFrame {
                 }
             });
 
+            // adds images + filenames to GUI
             imagePanel.add(imageLabel);
             imagePanel.add(filenameLabel);
 
+            // if relevant feedback is checked, show the checkboxes
             if (relevanceCheckbox.isSelected()) {
                 JCheckBox imageCheckbox = new JCheckBox("Relevant");
                 imageCheckboxes.add(imageCheckbox);

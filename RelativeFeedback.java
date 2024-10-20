@@ -42,32 +42,71 @@ public class RelativeFeedback {
         double[] stdevs = new double[numFeatures];
         double[] updatedWeights = new double[numFeatures];
         double totalWeight = 0.0;
+        double minNonZeroStdev = Double.MAX_VALUE;
 
         //  standard deviation for each column
         for (int j = 0; j < numFeatures; j++) {
-            double mean = 0.0;
+            double average = 0.0;
+
+            // average of current feature
             for (int i = 0; i < subFeatureMatrix.length; i++) {
-                mean += subFeatureMatrix[i][j];
+                average += subFeatureMatrix[i][j];
             }
-            mean /= subFeatureMatrix.length;
+            average /= subFeatureMatrix.length;
 
             double sumSqDiff = 0.0;
+
+            // calculate the sum of squared differences from the average for each feature
             for (int i = 0; i < subFeatureMatrix.length; i++) {
-                sumSqDiff += Math.pow(subFeatureMatrix[i][j] - mean, 2);
+                sumSqDiff += Math.pow(subFeatureMatrix[i][j] - average, 2);
             }
+
+
             stdevs[j] = Math.sqrt(sumSqDiff / (subFeatureMatrix.length - 1));
 
-            // Calculate initial weight as 1 / STDEV (if STDEV is 0, set weight to a high value)
+            // special cases: minimum non-zero stdev
+            if (stdevs[j] != 0) {
+                minNonZeroStdev = Math.min(minNonZeroStdev, stdevs[j]);
+            }
+            // Calculate initial weight as 1 / STDEV
             updatedWeights[j] = (stdevs[j] != 0) ? (1.0 / stdevs[j]) : Double.MAX_VALUE;
             totalWeight += updatedWeights[j];
         }
 
-        // Normalize weights
+        // Recompute the weights based on standard deviation
         for (int j = 0; j < numFeatures; j++) {
-            updatedWeights[j] /= totalWeight;
+            if (stdevs[j] == 0) { // Special case: stdev  ==  zero
+                double average = 0.0;
+
+                // Calculate the average again to check for special conditions
+                for (int i = 0; i < subFeatureMatrix.length; i++) {
+                    average += subFeatureMatrix[i][j];
+                }
+                average /= subFeatureMatrix.length;
+
+                if (average != 0) {
+                    // If the average is non-zero and STDEV is 0, set weight to 0.5 * minNonZeroStdev
+                    updatedWeights[j] = 0.5 * minNonZeroStdev;
+                } else {
+                    // If the average is zero, set the weight to 0
+                    updatedWeights[j] = 0.0;
+                }
+            } else {
+                // Regular case: weight = 1 / STDEV
+                updatedWeights[j] = 1.0 / stdevs[j];
+            }
+
+            // Add the updated weight to the totalWeight for normalization later
+            totalWeight += updatedWeights[j];
         }
 
-        return updatedWeights; // Return the normalized weights
+        // Normalize the updated weights (so they sum up to 1)
+        for (int j = 0; j < numFeatures; j++) {
+            updatedWeights[j] /= totalWeight; // Divide each weight by the total sum of weights
+        }
+
+        // Return the final normalized weights
+        return updatedWeights;
     }
 
 }
