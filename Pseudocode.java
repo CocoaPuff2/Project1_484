@@ -44,7 +44,7 @@ public class Pseudocode {
             Which feature more important? Which cols have the smallest variance
             (**Do STDEV based on SubFeatureMatrix)
 
-        k. Recompute weights: (**Do STDEV based on SubFeatureMatrix)
+       --> k. Recompute weights: (**Do STDEV based on SubFeatureMatrix)
 
             1. Calculate STDEV of each col
             2. Initial (Updated) Weight = 1 / STDEV for each col
@@ -57,10 +57,14 @@ public class Pseudocode {
                 if STDEV bigger --> LOWER WEIGHT
 
             3. Normalized Weight = (updated weight) / summation of ALL weights
-             ****** do we do WMD with the GNMatrix or the relevant images? ******
+
+             ****** Do the WMD with the GNMatrix  ******
+
                 --> NOW use this weight for the WeigthedMD: (Steps i-k repeated)
                     D(i, j): ∑ Wi * | fi(i) - fj(j) |
                     where  Wi =  Normalized Weight
+
+              ** display ALL images based on new relevancy **
 
     ---> if user doesn't pick as relevant, there is no weight (0)
 

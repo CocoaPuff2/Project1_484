@@ -70,7 +70,7 @@ public class RelativeFeedback {
             }
             // Calculate initial weight as 1 / STDEV
             updatedWeights[j] = (stdevs[j] != 0) ? (1.0 / stdevs[j]) : Double.MAX_VALUE;
-            totalWeight += updatedWeights[j];
+            // totalWeight += updatedWeights[j];
         }
 
         // Recompute the weights based on standard deviation

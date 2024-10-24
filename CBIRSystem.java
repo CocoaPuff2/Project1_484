@@ -60,6 +60,7 @@ public class CBIRSystem extends JFrame {
         combinedButton.addActionListener(e -> selectedMethod = "Intensity + Color Code Method");
 
         relevanceCheckbox = new JCheckBox("Relevance");
+        System.out.println("Relevance feedback toggled: " + relevanceCheckbox.isSelected());
         relevanceCheckbox.addActionListener(e -> {
             displayImages();
         });
@@ -133,21 +134,25 @@ public class CBIRSystem extends JFrame {
 
                     // initialize weights for weighted Manhattan distance calculation
                     double[] initialWeights = RelativeFeedback.calculateInitialWeights(GNnormalizedMatrix[0].length);
+                    System.out.println("Initial Weights: " + Arrays.toString(initialWeights));
 
                     // check if relevance feedback is enabled
                     if (relevanceCheckbox.isSelected()) {
                         List<Integer> selectedIndices = new ArrayList<>();
+                        System.out.println("Relevance feedback enabled.");
                         for (int i = 0; i < imageCheckboxes.size(); i++) {
                             if (imageCheckboxes.get(i).isSelected()) {
                                 selectedIndices.add(currentPage * IMAGES_PER_PAGE + i);
                             }
                         }
 
+                        System.out.println("Selected relevant images: " + selectedIndices);
+
                         // extract the relevant images
                         double [][] subFeatureMatrix = RelativeFeedback.extractRelevantImages(GNnormalizedMatrix, selectedIndices.stream().mapToInt(i -> i).toArray());
-
                         // Recompute weights based on the relevant images
                         initialWeights = RelativeFeedback.recomputeWeights(subFeatureMatrix);
+                        System.out.println("Recomputed Weights after relevance feedback: " + Arrays.toString(initialWeights));
 
 
                     }
