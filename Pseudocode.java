@@ -46,8 +46,8 @@ public class Pseudocode {
 
        --> k. Recompute weights: (**Do STDEV based on SubFeatureMatrix)
 
-            1. Calculate STDEV of each col
-            2. Initial (Updated) Weight = 1 / STDEV for each col
+            1. Calculate STDEV of each col (for each col of the relevant images)
+            2. Initial (Updated) Weight = 1 / STDEV for each col (each col has own weight, the whole col weight changes)
 
                 IF STDEV = 0
                     IF mean is NOT 0 --> 0.5 × min(non-zero standard deviations);
@@ -58,9 +58,9 @@ public class Pseudocode {
 
             3. Normalized Weight = (updated weight) / summation of ALL weights
 
-             ****** Do the WMD with the GNMatrix  ******
+             ****** Do the WMD with the GNMatrix (all the 100 images) ******
 
-                --> NOW use this weight for the WeigthedMD: (Steps i-k repeated)
+                --> NOW use this weight for the WeightedMD: (Steps i-k repeated)
                     D(i, j): ∑ Wi * | fi(i) - fj(j) |
                     where  Wi =  Normalized Weight
 
@@ -68,6 +68,11 @@ public class Pseudocode {
 
     ---> if user doesn't pick as relevant, there is no weight (0)
 
+1. when we recompute the weights and do the weighted manhattan distance formula AGAIN after the
+users have selected relevant images, we have to do the calculations for the entire GNNormalizedMatrix
+
+2. After the users pick relevant images, then we need to display ALL the images from the database,
+not just relevant ones
 
 
      */

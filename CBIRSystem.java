@@ -30,6 +30,9 @@ public class CBIRSystem extends JFrame {
     private JCheckBox relevanceCheckbox;
     private List<JCheckBox> imageCheckboxes = new ArrayList<>();
 
+    // List to keep track of checkbox states (ensure they stay checked even when page next)
+    private List<Boolean> checkboxStates = new ArrayList<>();
+
     public CBIRSystem() {
         setTitle("Content-Based Image Retrieval System");
         setSize(1000, 700);
@@ -79,7 +82,6 @@ public class CBIRSystem extends JFrame {
                     // loads all the images
                     BufferedImage[] allImages = new BufferedImage[imagePaths.length];
 
-                    //
                     for (int i = 0; i < imagePaths.length; i++) {
                         try {
                             allImages[i] = ImageIO.read(new File("images/" + imagePaths[i]));
@@ -90,17 +92,6 @@ public class CBIRSystem extends JFrame {
 
                     double[][] FAFeatureMatrix = Histograms.createFAFeatureMatrix(allImages);
 
-                    // todo:  delete later
-                    /*
-                    System.out.println("FAFeatureMatrix:");
-                    for (int i = 0; i < FAFeatureMatrix.length; i++) {
-                        for (int j = 0; j < FAFeatureMatrix[i].length; j++) {
-                            System.out.printf("%.4f ", FAFeatureMatrix[i][j]);
-                        }
-                        System.out.println();
-                    }
-
-                     */
 
                     // Part 2: Normalization: (of the FAFeatureMatrix)
                     // e. averages
@@ -109,28 +100,9 @@ public class CBIRSystem extends JFrame {
                     double[] averages = normalization.calculateAverages(FAFeatureMatrix);
                     double[] stdDevs = normalization.calculateStandardDeviations(FAFeatureMatrix, averages);
 
-                    /*
-                    System.out.println("Averages:");
-                    for (double avg : averages) {
-                        System.out.printf("%.4f ", avg);
-                    }
-                    System.out.println();
-
-                    // Print standard deviations
-                    System.out.println("Standard Deviations:");
-                    for (double stdDev : stdDevs) {
-                        System.out.printf("%.4f ", stdDev);
-                    }
-                    System.out.println();
-
-                     */
-
                     double[][] GNnormalizedMatrix = Normalization.gaussianNormalization(FAFeatureMatrix, averages, stdDevs);
 
                     // TODO: Note, GN method may need adjustments
-
-                    System.out.println("GNnormalizedMatrix:");
-
 
                     // initialize weights for weighted Manhattan distance calculation
                     double[] initialWeights = RelativeFeedback.calculateInitialWeights(GNnormalizedMatrix[0].length);
@@ -150,6 +122,20 @@ public class CBIRSystem extends JFrame {
 
                         // extract the relevant images
                         double [][] subFeatureMatrix = RelativeFeedback.extractRelevantImages(GNnormalizedMatrix, selectedIndices.stream().mapToInt(i -> i).toArray());
+                        System.out.println("Extracted rows of selected images:");
+
+                        // TODO: delete print statements once no longer needed
+                        for (int i = 0; i < selectedIndices.size(); i++) {
+                            System.out.println("Image " + (selectedIndices.get(i) + 1) + ": " + imagePaths[selectedIndices.get(i)]);
+                        }
+
+                        // Print recomputed averages and standard deviations
+                        averages = normalization.calculateAverages(subFeatureMatrix);
+                        stdDevs = normalization.calculateStandardDeviations(subFeatureMatrix, averages);
+
+                        System.out.println("Recomputed Averages for selected images: " + Arrays.toString(averages));
+                        System.out.println("Recomputed Standard Deviations for selected images: " + Arrays.toString(stdDevs));
+
                         // Recompute weights based on the relevant images
                         initialWeights = RelativeFeedback.recomputeWeights(subFeatureMatrix);
                         System.out.println("Recomputed Weights after relevance feedback: " + Arrays.toString(initialWeights));
@@ -181,10 +167,8 @@ public class CBIRSystem extends JFrame {
 
                     // Sort the distance list by the computed distances (ascending order)
                     distanceList.sort(Comparator.comparingDouble(Map.Entry::getValue));
-
                     // Update the imagePaths to reflect the new sorted order based on similarity (closest to query image first)
                     imagePaths = distanceList.stream().map(Map.Entry::getKey).toArray(String[]::new);
-
 
                     // Display the images in the new order of similarity
                     displayImages();
@@ -234,6 +218,7 @@ public class CBIRSystem extends JFrame {
         queryImagePanel.add(buttonPanel, BorderLayout.SOUTH);
         mainPanel.add(queryImagePanel, BorderLayout.EAST);
 
+
         JPanel navigationPanel = new JPanel();
         pageLabel = new JLabel("Page: " + (currentPage + 1));
         pageLabel.setFont(new Font("Serif", Font.PLAIN, 17));
@@ -271,6 +256,8 @@ public class CBIRSystem extends JFrame {
         if (imagesDir.exists() && imagesDir.isDirectory()) {
             imagePaths = imagesDir.list((dir, name) -> name.endsWith(".jpg"));
         }
+
+        checkboxStates = new ArrayList<>(Collections.nCopies(imagePaths.length, false));
     }
 
     private void displayImages() {
@@ -283,6 +270,7 @@ public class CBIRSystem extends JFrame {
 
         pageLabel.setText("Page: " + (currentPage + 1));
 
+        // Adjust the checkbox logic
         for (int i = startIndex; i < endIndex; i++) {
             JPanel imagePanel = new JPanel();
             imagePanel.setLayout(new BoxLayout(imagePanel, BoxLayout.Y_AXIS));
@@ -316,6 +304,13 @@ public class CBIRSystem extends JFrame {
             // if relevant feedback is checked, show the checkboxes
             if (relevanceCheckbox.isSelected()) {
                 JCheckBox imageCheckbox = new JCheckBox("Relevant");
+
+                // TOOD chenged code here...
+                imageCheckbox.setSelected(checkboxStates.get(i));
+                final int index = i;
+                imageCheckbox.addActionListener(e -> checkboxStates.set(index, imageCheckbox.isSelected()));
+                //
+
                 imageCheckboxes.add(imageCheckbox);
                 imagePanel.add(imageCheckbox);
             }

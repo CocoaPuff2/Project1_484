@@ -19,6 +19,8 @@ public class RelativeFeedback {
 
 
     // Part 4: (j) and (k) Pick relevant images and Recompute weights:
+    // use sep array for the weights
+    // then use the updated weights for the new iterations of the WMD
     public static double[][] extractRelevantImages(double[][] normalizedFeatures, int[] selectedIndices) {
 
         // keeps track of relevant images
