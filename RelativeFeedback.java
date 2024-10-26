@@ -30,7 +30,7 @@ public class RelativeFeedback {
             int index = selectedIndices[i];
             // Check if the index is valid
             if (index < 0 || index >= normalizedFeatures.length) {
-                throw new IllegalArgumentException("Index " + index + " is out of bounds.");
+                throw new IllegalArgumentException("Index " + index + " is OUT of bounds.");
             }
 
             relevantImages[i] = normalizedFeatures[index]; // Copy the selected row
@@ -40,13 +40,19 @@ public class RelativeFeedback {
     }
 
     public static double[] recomputeWeights(double[][] subFeatureMatrix) {
+
+        if (subFeatureMatrix.length == 0) {
+            System.out.println("No relevant images selected. Exiting weight recomputation.");
+            return new double[0]; // Return an empty weight array or handle this case accordingly
+        }
+
         int numFeatures = subFeatureMatrix[0].length;
         double[] stdevs = new double[numFeatures];
         double[] updatedWeights = new double[numFeatures];
         double totalWeight = 0.0;
         double minNonZeroStdev = Double.MAX_VALUE;
 
-        //  standard deviation for each column
+        // Step 1: Get STDEV for each relevant image col
         for (int j = 0; j < numFeatures; j++) {
             double average = 0.0;
 
@@ -54,26 +60,27 @@ public class RelativeFeedback {
             for (int i = 0; i < subFeatureMatrix.length; i++) {
                 average += subFeatureMatrix[i][j];
             }
-            average /= subFeatureMatrix.length;
+            average /= subFeatureMatrix.length; // average calculation
 
             double sumSqDiff = 0.0;
 
-            // calculate the sum of squared differences from the average for each feature
+            // calculate: sum of squared differences from the average for each feature
             for (int i = 0; i < subFeatureMatrix.length; i++) {
                 sumSqDiff += Math.pow(subFeatureMatrix[i][j] - average, 2);
             }
 
 
+            // STDEV calculation
             stdevs[j] = Math.sqrt(sumSqDiff / (subFeatureMatrix.length - 1));
 
             // special cases: minimum non-zero stdev
             if (stdevs[j] != 0) {
                 minNonZeroStdev = Math.min(minNonZeroStdev, stdevs[j]);
             }
-            // Calculate initial weight as 1 / STDEV
-            updatedWeights[j] = (stdevs[j] != 0) ? (1.0 / stdevs[j]) : Double.MAX_VALUE;
-            // totalWeight += updatedWeights[j];
         }
+
+        // PRINT:  recomputed standard deviations (from step 1 of recompute weights)
+        System.out.println("Recomputed Standard Deviations: " + Arrays.toString(stdevs));
 
         // Recompute the weights based on standard deviation
         for (int j = 0; j < numFeatures; j++) {
@@ -94,18 +101,25 @@ public class RelativeFeedback {
                     updatedWeights[j] = 0.0;
                 }
             } else {
-                // Regular case: weight = 1 / STDEV
+                // Step 2: Regular case: weight = 1 / STDEV
                 updatedWeights[j] = 1.0 / stdevs[j];
             }
-
-            // Add the updated weight to the totalWeight for normalization later
-            totalWeight += updatedWeights[j];
         }
 
-        // Normalize the updated weights (so they sum up to 1)
+        // PRINT: Initial (Updated) Weight (happens inside recompute weights)
+        System.out.println("Initial (Updated) Weights: " + Arrays.toString(updatedWeights));
+
+        // Normalize the updated weights so they sum up to 1
+        for (double weight : updatedWeights) {
+            totalWeight += weight; // Sum all weights
+        }
+
         for (int j = 0; j < numFeatures; j++) {
-            updatedWeights[j] /= totalWeight; // Divide each weight by the total sum of weights
+            updatedWeights[j] /= totalWeight; // Normalize each weight
         }
+
+        // PRINT: Normalized Weight (happens inside recompute weights)
+        System.out.println("Normalized Weights: " + Arrays.toString(updatedWeights));
 
         // Return the final normalized weights
         return updatedWeights;

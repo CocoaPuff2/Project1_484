@@ -31,7 +31,10 @@ public class CBIRSystem extends JFrame {
     private List<JCheckBox> imageCheckboxes = new ArrayList<>();
 
     // List to keep track of checkbox states (ensure they stay checked even when page next)
-    private List<Boolean> checkboxStates = new ArrayList<>();
+    private Map<String, Boolean> checkboxStatesMap = new HashMap<>();
+
+    // To ensure that checked boxes on other pages are still marked as relevant
+    private Set<Integer> relevantImageIndices = new HashSet<>();
 
     public CBIRSystem() {
         setTitle("Content-Based Image Retrieval System");
@@ -79,9 +82,8 @@ public class CBIRSystem extends JFrame {
                     histograms.put(imagePaths[currentPage * IMAGES_PER_PAGE], histogram);
                     sortImages(histogram);
                 } else if (selectedMethod.equals("Intensity + Color Code Method")) {
-                    // loads all the images
+                    // load all the images
                     BufferedImage[] allImages = new BufferedImage[imagePaths.length];
-
                     for (int i = 0; i < imagePaths.length; i++) {
                         try {
                             allImages[i] = ImageIO.read(new File("images/" + imagePaths[i]));
@@ -90,56 +92,78 @@ public class CBIRSystem extends JFrame {
                         }
                     }
 
+                    // Part 1: Get the combined feature matrix
                     double[][] FAFeatureMatrix = Histograms.createFAFeatureMatrix(allImages);
 
 
                     // Part 2: Normalization: (of the FAFeatureMatrix)
-                    // e. averages
-                    // f. STDEV
+                    // e. averages and f. STDEV
                     Normalization normalization = new Normalization();
                     double[] averages = normalization.calculateAverages(FAFeatureMatrix);
                     double[] stdDevs = normalization.calculateStandardDeviations(FAFeatureMatrix, averages);
 
+                    // Par 3: Gaussian Normalization
                     double[][] GNnormalizedMatrix = Normalization.gaussianNormalization(FAFeatureMatrix, averages, stdDevs);
 
-                    // TODO: Note, GN method may need adjustments
-
-                    // initialize weights for weighted Manhattan distance calculation
+                    // Part 4: Relevance Feedback
+                    // Initialize weights for weighted Manhattan distance calculation
                     double[] initialWeights = RelativeFeedback.calculateInitialWeights(GNnormalizedMatrix[0].length);
                     System.out.println("Initial Weights: " + Arrays.toString(initialWeights));
 
                     // check if relevance feedback is enabled
+                    relevantImageIndices.clear();
+
                     if (relevanceCheckbox.isSelected()) {
                         List<Integer> selectedIndices = new ArrayList<>();
                         System.out.println("Relevance feedback enabled.");
+
+
+                        /*
                         for (int i = 0; i < imageCheckboxes.size(); i++) {
                             if (imageCheckboxes.get(i).isSelected()) {
                                 selectedIndices.add(currentPage * IMAGES_PER_PAGE + i);
                             }
                         }
 
-                        System.out.println("Selected relevant images: " + selectedIndices);
+                         */
 
-                        // extract the relevant images
-                        double [][] subFeatureMatrix = RelativeFeedback.extractRelevantImages(GNnormalizedMatrix, selectedIndices.stream().mapToInt(i -> i).toArray());
+
+                        /*
+                        for (String imagePath : imagePaths) {
+                            if (checkboxStatesMap.getOrDefault(imagePath, false)) {
+                                relevantImageIndices.add(Arrays.asList(imagePaths).indexOf(imagePath)); // Adds global index to set
+                            }
+                        }
+
+                         */
+                        for (int i = 0; i < imagePaths.length; i++) {
+                            if (checkboxStatesMap.getOrDefault(imagePaths[i], false)) {
+                                selectedIndices.add(i); // Add the global index directly
+                            }
+                        }
+
+
+
+                        // extract relevant images
+                        double [][] subFeatureMatrix = RelativeFeedback.extractRelevantImages(
+                                GNnormalizedMatrix,
+                                selectedIndices.stream().mapToInt(i -> i).toArray()
+                        );
+
+                        // print extracted rows
                         System.out.println("Extracted rows of selected images:");
-
-                        // TODO: delete print statements once no longer needed
                         for (int i = 0; i < selectedIndices.size(); i++) {
                             System.out.println("Image " + (selectedIndices.get(i) + 1) + ": " + imagePaths[selectedIndices.get(i)]);
                         }
 
-                        // Print recomputed averages and standard deviations
-                        averages = normalization.calculateAverages(subFeatureMatrix);
-                        stdDevs = normalization.calculateStandardDeviations(subFeatureMatrix, averages);
-
-                        System.out.println("Recomputed Averages for selected images: " + Arrays.toString(averages));
-                        System.out.println("Recomputed Standard Deviations for selected images: " + Arrays.toString(stdDevs));
 
                         // Recompute weights based on the relevant images
                         initialWeights = RelativeFeedback.recomputeWeights(subFeatureMatrix);
-                        System.out.println("Recomputed Weights after relevance feedback: " + Arrays.toString(initialWeights));
-
+                        if (initialWeights.length == 0) {
+                            System.out.println("No relevant images selected or weights are empty.");
+                        } else {
+                            System.out.println("Recomputed Weights after relevance feedback: " + Arrays.toString(initialWeights));
+                        }
 
                     }
 
@@ -156,8 +180,8 @@ public class CBIRSystem extends JFrame {
                     for (int i = 0; i < GNnormalizedMatrix.length; i++) {
                         // Calculate the weighted Manhattan distance between the query image and the current image
                         double distance = RelativeFeedback.weightedManhattanDistance(
-                                GNnormalizedMatrix[queryImageIndex], // The query image (assumed to be the first)
-                                GNnormalizedMatrix[i],               // The current image being compared
+                                GNnormalizedMatrix[queryImageIndex], // query image
+                                GNnormalizedMatrix[i],               // current image being compared
                                 initialWeights                       // Initial weights for each feature
                         );
 
@@ -257,7 +281,14 @@ public class CBIRSystem extends JFrame {
             imagePaths = imagesDir.list((dir, name) -> name.endsWith(".jpg"));
         }
 
-        checkboxStates = new ArrayList<>(Collections.nCopies(imagePaths.length, false));
+        Map<String, Integer> globalImageIndexMap = new HashMap<>(); // todo may del
+        for (int i = 0; i < imagePaths.length; i++) {
+            globalImageIndexMap.put(imagePaths[i], i); // Maps image path to its global index // todo may del
+        }
+
+        for (String imagePath : imagePaths) {
+            checkboxStatesMap.put(imagePath, false);
+        }
     }
 
     private void displayImages() {
@@ -305,13 +336,11 @@ public class CBIRSystem extends JFrame {
             if (relevanceCheckbox.isSelected()) {
                 JCheckBox imageCheckbox = new JCheckBox("Relevant");
 
-                // TOOD chenged code here...
-                imageCheckbox.setSelected(checkboxStates.get(i));
-                final int index = i;
-                imageCheckbox.addActionListener(e -> checkboxStates.set(index, imageCheckbox.isSelected()));
-                //
-
+                imageCheckbox.setSelected(checkboxStatesMap.getOrDefault(imagePath, false));
                 imageCheckboxes.add(imageCheckbox);
+
+                final String path = imagePath; // Use final variable for the inner class
+                imageCheckbox.addActionListener(e -> checkboxStatesMap.put(path, imageCheckbox.isSelected()));
                 imagePanel.add(imageCheckbox);
             }
 
