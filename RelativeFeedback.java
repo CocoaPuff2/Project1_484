@@ -4,16 +4,24 @@ public class RelativeFeedback {
     // Part 4: (h) and (i) Weighted Manhattan Distance
     public static double[] calculateInitialWeights(int numFeatures) {
         double[] initialWeights = new double[numFeatures];
-        Arrays.fill(initialWeights, 1.0 / numFeatures);
+         Arrays.fill(initialWeights, 1.0 / numFeatures); // todo uncomment later
+        // Arrays.fill(initialWeights, 1.0 / 7); // todo: del later
         return initialWeights;
     }
 
 
     public static double weightedManhattanDistance(double[] feature1, double[] feature2, double[] weights) {
         double distance = 0.0;
+        /*
+        for (int i = 0; i < 7; i++) {
+            distance += weights[i] * Math.abs(feature1[i] - feature2[i]);
+        }
+        */
         for (int i = 0; i < feature1.length; i++) {
             distance += weights[i] * Math.abs(feature1[i] - feature2[i]);
         }
+
+
         return distance;
     }
 
@@ -26,6 +34,7 @@ public class RelativeFeedback {
         // keeps track of relevant images
         double[][] relevantImages = new double[selectedIndices.length][normalizedFeatures[0].length];
         // Extract the first x rows (from the images the user picks as relevant)
+
         for (int i  = 0; i < selectedIndices.length; i++) {
             int index = selectedIndices[i];
             // Check if the index is valid
@@ -33,10 +42,17 @@ public class RelativeFeedback {
                 throw new IllegalArgumentException("Index " + index + " is OUT of bounds.");
             }
 
-            relevantImages[i] = normalizedFeatures[index]; // Copy the selected row
+            System.out.print("Extracting row for image index: " + index + " - ");
+            for (double value : normalizedFeatures[index]) {
+                System.out.print(value + " ");
+            }
+            System.out.println();
+
+
+            relevantImages[i] = normalizedFeatures[index]; // Copy selected row
         }
 
-        return relevantImages; // Returns the extracted rows (x x 89)
+        return relevantImages; // return extracted rows (x x 89)
     }
 
     public static double[] recomputeWeights(double[][] subFeatureMatrix) {
@@ -45,8 +61,8 @@ public class RelativeFeedback {
             System.out.println("No relevant images selected. Exiting weight recomputation.");
             return new double[0]; // Return an empty weight array or handle this case accordingly
         }
-
-        int numFeatures = subFeatureMatrix[0].length;
+        int numFeatures = subFeatureMatrix[0].length; // todo uncomment later
+        // int numFeatures = 7; // todo del later
         double[] stdevs = new double[numFeatures];
         double[] updatedWeights = new double[numFeatures];
         double totalWeight = 0.0;
@@ -80,7 +96,7 @@ public class RelativeFeedback {
         }
 
         // PRINT:  recomputed standard deviations (from step 1 of recompute weights)
-        System.out.println("Recomputed Standard Deviations: " + Arrays.toString(stdevs));
+        System.out.println("Recomputed Standard Deviations (1st 7): " + Arrays.toString(stdevs));
 
         // Recompute the weights based on standard deviation
         for (int j = 0; j < numFeatures; j++) {
@@ -107,7 +123,7 @@ public class RelativeFeedback {
         }
 
         // PRINT: Initial (Updated) Weight (happens inside recompute weights)
-        System.out.println("Initial (Updated) Weights: " + Arrays.toString(updatedWeights));
+        System.out.println("Initial (Updated) Weights (1st 7): " + Arrays.toString(updatedWeights));
 
         // Normalize the updated weights so they sum up to 1
         for (double weight : updatedWeights) {
@@ -119,7 +135,7 @@ public class RelativeFeedback {
         }
 
         // PRINT: Normalized Weight (happens inside recompute weights)
-        System.out.println("Normalized Weights: " + Arrays.toString(updatedWeights));
+         System.out.println("Normalized Weights (1st 7): " + Arrays.toString(updatedWeights));
 
         // Return the final normalized weights
         return updatedWeights;

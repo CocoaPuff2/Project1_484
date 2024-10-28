@@ -150,19 +150,19 @@ public class CBIRSystem extends JFrame {
                                 selectedIndices.stream().mapToInt(i -> i).toArray()
                         );
 
-                        // print extracted rows
-                        System.out.println("Extracted rows of selected images:");
+                        // print the image name rows
+                        System.out.println("Selected image names:");
                         for (int i = 0; i < selectedIndices.size(); i++) {
                             System.out.println("Image " + (selectedIndices.get(i) + 1) + ": " + imagePaths[selectedIndices.get(i)]);
                         }
+
+                        // print the extracted row of the selected images
 
 
                         // Recompute weights based on the relevant images
                         initialWeights = RelativeFeedback.recomputeWeights(subFeatureMatrix);
                         if (initialWeights.length == 0) {
                             System.out.println("No relevant images selected or weights are empty.");
-                        } else {
-                            System.out.println("Recomputed Weights after relevance feedback: " + Arrays.toString(initialWeights));
                         }
 
                     }
