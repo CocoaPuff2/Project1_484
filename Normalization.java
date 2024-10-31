@@ -30,7 +30,8 @@ public class Normalization {
                 double diff = featureMatrix[i][j] - averages[j];
                 sumSquaredDiffs += diff * diff;
             }
-            stdDevs[j] = Math.sqrt(sumSquaredDiffs / numRows);
+            // stdDevs[j] = Math.sqrt(sumSquaredDiffs / numRows); // todo uncomment if needed
+            stdDevs[j] = Math.sqrt(sumSquaredDiffs / (numRows - 1));
         }
 
         return stdDevs; // stdev for each col

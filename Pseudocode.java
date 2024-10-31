@@ -41,8 +41,8 @@ public class Pseudocode {
             into SubFeatureMatrix
            ex: 3 relevant images? -->  Extract the 3 images rows so it’s (3 x 89).
 
-            Which feature more important? Which cols have the smallest variance
-            (**Do STDEV based on SubFeatureMatrix)
+            Which feature more important? -->   cols that have the smallest variance
+                                                smaller variance = bigger weight
 
        --> k. Recompute weights: (**Do STDEV based on SubFeatureMatrix)
 

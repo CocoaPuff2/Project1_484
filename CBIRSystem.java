@@ -87,6 +87,7 @@ public class CBIRSystem extends JFrame {
                     for (int i = 0; i < imagePaths.length; i++) {
                         try {
                             allImages[i] = ImageIO.read(new File("images/" + imagePaths[i]));
+                            System.out.printf("Loaded Image %d: %s%n", i, imagePaths[i]);
                         } catch (IOException ex) {
                             ex.printStackTrace();
                         }
@@ -94,6 +95,16 @@ public class CBIRSystem extends JFrame {
 
                     // Part 1: Get the combined feature matrix
                     double[][] FAFeatureMatrix = Histograms.createFAFeatureMatrix(allImages);
+                    // todo del later
+                    /*
+                    double[][] featureMatrix = {
+                            {0.25, 0.375, 0.375, 0.25, 0.25, 0.25, 0.25}, // Image 1
+                            {0.1, 0.5, 0.4, 0.0, 0.0, 0.5, 0.5},           // Image 2
+                            {0.4, 0.4, 0.2, 0.4, 0.4, 0.2, 0.0},           // Image 3
+                            {0.4, 0.4, 0.2, 0.2, 0.2, 0.2, 0.4}            // Image 4
+                    };
+
+                     */
 
 
                     // Part 2: Normalization: (of the FAFeatureMatrix)
@@ -102,47 +113,65 @@ public class CBIRSystem extends JFrame {
                     double[] averages = normalization.calculateAverages(FAFeatureMatrix);
                     double[] stdDevs = normalization.calculateStandardDeviations(FAFeatureMatrix, averages);
 
+                    // todo del later
+                    /*
+                    double[] averageDel = normalization.calculateAverages(featureMatrix);
+                    System.out.println("\nAverages FOR TEST:");
+                    for (int i = 0; i < averageDel.length; i++) {
+                        System.out.printf("Feature %d: %.3f%n", i + 1, averageDel[i]);
+                    }
+                    double[] stdDevDel = normalization.calculateStandardDeviations(featureMatrix, averageDel);
+                    System.out.println("\nStandard Deviations FOR TEST:");
+                    for (int i = 0; i < stdDevDel.length; i++) {
+                        System.out.printf("Feature %d: %.3f%n", i + 1, stdDevDel[i]);
+                    }
+
+                     */
+
                     // Par 3: Gaussian Normalization
                     double[][] GNnormalizedMatrix = Normalization.gaussianNormalization(FAFeatureMatrix, averages, stdDevs);
+
+                    // todo del later
+                    /*
+                    double[][] GN = Normalization.gaussianNormalization(featureMatrix, averageDel, stdDevDel);
+                    System.out.println("\nGaussian Normalized Matrix FOR TEST (GN):");
+                    for (int i = 0; i < GN.length; i++) {
+                        for (int j = 0; j < GN[i].length; j++) {
+                            System.out.printf("%.3f\t", GN[i][j]); // Print with three decimal places
+                        }
+                        System.out.println(); // Move to the next line after each image
+                    }
+
+                     */
+
 
                     // Part 4: Relevance Feedback
                     // Initialize weights for weighted Manhattan distance calculation
                     double[] initialWeights = RelativeFeedback.calculateInitialWeights(GNnormalizedMatrix[0].length);
-                    System.out.println("Initial Weights: " + Arrays.toString(initialWeights));
+
+                    // todo del later
+                    /*
+                    double[] initialWeightDel = RelativeFeedback.calculateInitialWeights(GN[0].length);
+                    System.out.println("Initial Weights FOR TEST:");
+                    for (int j = 0; j < initialWeightDel.length; j++) {
+                        System.out.printf("Weight for Feature %d: %.4f%n", j + 1, initialWeightDel[j]);
+                    }
+
+                     */
 
                     // check if relevance feedback is enabled
                     relevantImageIndices.clear();
 
                     if (relevanceCheckbox.isSelected()) {
                         List<Integer> selectedIndices = new ArrayList<>();
+                        List<Integer> selectedIndicesDel = new ArrayList<>();
                         System.out.println("Relevance feedback enabled.");
 
-
-                        /*
-                        for (int i = 0; i < imageCheckboxes.size(); i++) {
-                            if (imageCheckboxes.get(i).isSelected()) {
-                                selectedIndices.add(currentPage * IMAGES_PER_PAGE + i);
-                            }
-                        }
-
-                         */
-
-
-                        /*
-                        for (String imagePath : imagePaths) {
-                            if (checkboxStatesMap.getOrDefault(imagePath, false)) {
-                                relevantImageIndices.add(Arrays.asList(imagePaths).indexOf(imagePath)); // Adds global index to set
-                            }
-                        }
-
-                         */
                         for (int i = 0; i < imagePaths.length; i++) {
                             if (checkboxStatesMap.getOrDefault(imagePaths[i], false)) {
-                                selectedIndices.add(i); // Add the global index directly
+                                selectedIndices.add(i); // Add global index directly
                             }
                         }
-
-
 
                         // extract relevant images
                         double [][] subFeatureMatrix = RelativeFeedback.extractRelevantImages(
@@ -150,17 +179,44 @@ public class CBIRSystem extends JFrame {
                                 selectedIndices.stream().mapToInt(i -> i).toArray()
                         );
 
+                        // todo del later
+                        /*
+                        double[][] subFeatureDel = new double[2][GN[0].length];
+                        for (int i = 0; i < 2; i++) {
+                            subFeatureDel[i] = GN[i]; // Copy the first two rows from GN
+                        }
+                        System.out.println("Extracted Features from GN for Testing:");
+                        for (int i = 0; i < subFeatureDel.length; i++) {
+                            System.out.print("Image " + (i + 1) + ": ");
+                            for (int j = 0; j < subFeatureDel[i].length; j++) {
+                                System.out.printf("%.4f ", subFeatureDel[i][j]); // Print each feature with 4 decimal places
+                            }
+                            System.out.println(); // New line for next image
+                        }
+
+                         */
+
                         // print the image name rows
                         System.out.println("Selected image names:");
                         for (int i = 0; i < selectedIndices.size(); i++) {
                             System.out.println("Image " + (selectedIndices.get(i) + 1) + ": " + imagePaths[selectedIndices.get(i)]);
                         }
 
-                        // print the extracted row of the selected images
-
 
                         // Recompute weights based on the relevant images
                         initialWeights = RelativeFeedback.recomputeWeights(subFeatureMatrix);
+
+                        // todo del later
+                        /*
+                        initialWeightDel = RelativeFeedback.recomputeWeights(subFeatureDel);
+                        System.out.println("Recomputed Weights TEST (AFTER recompute Weights):");
+                        for (int j = 0; j < initialWeightDel.length; j++) {
+                            System.out.printf("Weight for Feature %d: %.4f%n", j + 1, initialWeightDel[j]);
+                        }
+
+                         */
+
+
                         if (initialWeights.length == 0) {
                             System.out.println("No relevant images selected or weights are empty.");
                         }
@@ -178,6 +234,8 @@ public class CBIRSystem extends JFrame {
                     int queryImageIndex = 0;
 
                     for (int i = 0; i < GNnormalizedMatrix.length; i++) {
+                        // if (i == queryImageIndex) continue; // Skip self-comparison
+
                         // Calculate the weighted Manhattan distance between the query image and the current image
                         double distance = RelativeFeedback.weightedManhattanDistance(
                                 GNnormalizedMatrix[queryImageIndex], // query image
@@ -191,6 +249,7 @@ public class CBIRSystem extends JFrame {
 
                     // Sort the distance list by the computed distances (ascending order)
                     distanceList.sort(Comparator.comparingDouble(Map.Entry::getValue));
+
                     // Update the imagePaths to reflect the new sorted order based on similarity (closest to query image first)
                     imagePaths = distanceList.stream().map(Map.Entry::getKey).toArray(String[]::new);
 
