@@ -104,7 +104,9 @@ public class CBIRSystem extends JFrame {
                             {0.4, 0.4, 0.2, 0.2, 0.2, 0.2, 0.4}            // Image 4
                     };
 
+
                      */
+
 
 
                     // Part 2: Normalization: (of the FAFeatureMatrix)
@@ -127,6 +129,8 @@ public class CBIRSystem extends JFrame {
                     }
 
                      */
+
+
 
                     // Par 3: Gaussian Normalization
                     double[][] GNnormalizedMatrix = Normalization.gaussianNormalization(FAFeatureMatrix, averages, stdDevs);
@@ -196,6 +200,7 @@ public class CBIRSystem extends JFrame {
 
                          */
 
+
                         // print the image name rows
                         System.out.println("Selected image names:");
                         for (int i = 0; i < selectedIndices.size(); i++) {
@@ -215,7 +220,6 @@ public class CBIRSystem extends JFrame {
                         }
 
                          */
-
 
                         if (initialWeights.length == 0) {
                             System.out.println("No relevant images selected or weights are empty.");
@@ -247,8 +251,9 @@ public class CBIRSystem extends JFrame {
                         distanceList.add(new AbstractMap.SimpleEntry<>(imagePaths[i], distance));
                     }
 
+
                     // Sort the distance list by the computed distances (ascending order)
-                    distanceList.sort(Comparator.comparingDouble(Map.Entry::getValue));
+                    sortImagesRF(distanceList);
 
                     // Update the imagePaths to reflect the new sorted order based on similarity (closest to query image first)
                     imagePaths = distanceList.stream().map(Map.Entry::getKey).toArray(String[]::new);
@@ -333,7 +338,6 @@ public class CBIRSystem extends JFrame {
         displayImages();
         setVisible(true);
     }
-
     private void loadImages() {
         File imagesDir = new File("images");
         if (imagesDir.exists() && imagesDir.isDirectory()) {
@@ -436,7 +440,6 @@ public class CBIRSystem extends JFrame {
             int[] imageHistogram;
             int numBins;
 
-            // todo add new method here (?)
             if (selectedMethod.equals("Intensity Method")) {
                 imageHistogram = Histograms.intensityMethod(image);
                 numBins = INTENSITY_NUM_BINS;
@@ -453,6 +456,29 @@ public class CBIRSystem extends JFrame {
         imagePaths = distanceList.stream().map(Entry::getKey).toArray(String[]::new);
         displayImages();
     }
+
+    private void sortImagesRF(List<Entry<String, Double>> distanceList) {
+        // Sort the distance list by the computed distances (ascending order)
+        System.out.println("\nDistances before sorting (RF):");
+        for (int i = 0; i < distanceList.size(); i++) {
+            Map.Entry<String, Double> entry = distanceList.get(i);
+            System.out.printf("%d -> Image: %s, Distance: %.16f%n", i, entry.getKey(), entry.getValue());
+        }
+
+        distanceList.sort(Comparator.comparingDouble(Map.Entry::getValue));
+
+        System.out.println("\nDistances after sorting (RF):");
+        for (Map.Entry<String, Double> entry : distanceList) {
+            System.out.printf("Image: %s, Distance: %.4f%n", entry.getKey(), entry.getValue());
+        }
+
+        // Update the imagePaths to reflect the new sorted order based on similarity (closest to query image first)
+        imagePaths = distanceList.stream().map(Map.Entry::getKey).toArray(String[]::new);
+
+        // Display the images in the new order of similarity
+        displayImages();
+    }
+
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(CBIRSystem::new);

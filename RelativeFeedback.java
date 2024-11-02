@@ -12,8 +12,10 @@ public class RelativeFeedback {
 
     public static double weightedManhattanDistance(double[] feature1, double[] feature2, double[] weights) {
         double distance = 0.0;
+
         for (int i = 0; i < feature1.length; i++) {
             distance += weights[i] * Math.abs(feature1[i] - feature2[i]);
+
         }
 
         return distance;
