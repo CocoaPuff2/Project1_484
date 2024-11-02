@@ -5,7 +5,7 @@ public class RelativeFeedback {
     public static double[] calculateInitialWeights(int numFeatures) {
         double[] initialWeights = new double[numFeatures];
          Arrays.fill(initialWeights, 1.0 / numFeatures);
-        System.out.println("Initial Weights: " + Arrays.toString(initialWeights));
+       //  System.out.println("Initial Weights: " + Arrays.toString(initialWeights));
         return initialWeights;
     }
 

@@ -87,7 +87,7 @@ public class CBIRSystem extends JFrame {
                     for (int i = 0; i < imagePaths.length; i++) {
                         try {
                             allImages[i] = ImageIO.read(new File("images/" + imagePaths[i]));
-                            System.out.printf("Loaded Image %d: %s%n", i, imagePaths[i]);
+                            // System.out.printf("Loaded Image %d: %s%n", i, imagePaths[i]);
                         } catch (IOException ex) {
                             ex.printStackTrace();
                         }
@@ -169,7 +169,7 @@ public class CBIRSystem extends JFrame {
                     if (relevanceCheckbox.isSelected()) {
                         List<Integer> selectedIndices = new ArrayList<>();
                         List<Integer> selectedIndicesDel = new ArrayList<>();
-                        System.out.println("Relevance feedback enabled.");
+                        // System.out.println("Relevance feedback enabled.");
 
                         for (int i = 0; i < imagePaths.length; i++) {
                             if (checkboxStatesMap.getOrDefault(imagePaths[i], false)) {
@@ -202,10 +202,14 @@ public class CBIRSystem extends JFrame {
 
 
                         // print the image name rows
+                        /*
                         System.out.println("Selected image names:");
                         for (int i = 0; i < selectedIndices.size(); i++) {
                             System.out.println("Image " + (selectedIndices.get(i) + 1) + ": " + imagePaths[selectedIndices.get(i)]);
                         }
+
+                         */
+
 
 
                         // Recompute weights based on the relevant images
@@ -235,10 +239,10 @@ public class CBIRSystem extends JFrame {
                     }
 
                     List<Map.Entry<String, Double>> distanceList = new ArrayList<>();
-                    int queryImageIndex = 0;
+                     int queryImageIndex = 0;
 
                     for (int i = 0; i < GNnormalizedMatrix.length; i++) {
-                        // if (i == queryImageIndex) continue; // Skip self-comparison
+                        // if (i == queryImageIndex) continue; // Skips self-comparison
 
                         // Calculate the weighted Manhattan distance between the query image and the current image
                         double distance = RelativeFeedback.weightedManhattanDistance(
@@ -338,6 +342,8 @@ public class CBIRSystem extends JFrame {
         displayImages();
         setVisible(true);
     }
+
+
     private void loadImages() {
         File imagesDir = new File("images");
         if (imagesDir.exists() && imagesDir.isDirectory()) {
@@ -459,18 +465,24 @@ public class CBIRSystem extends JFrame {
 
     private void sortImagesRF(List<Entry<String, Double>> distanceList) {
         // Sort the distance list by the computed distances (ascending order)
+        /*
         System.out.println("\nDistances before sorting (RF):");
         for (int i = 0; i < distanceList.size(); i++) {
             Map.Entry<String, Double> entry = distanceList.get(i);
             System.out.printf("%d -> Image: %s, Distance: %.16f%n", i, entry.getKey(), entry.getValue());
         }
 
+         */
+
         distanceList.sort(Comparator.comparingDouble(Map.Entry::getValue));
 
+        /*
         System.out.println("\nDistances after sorting (RF):");
         for (Map.Entry<String, Double> entry : distanceList) {
             System.out.printf("Image: %s, Distance: %.4f%n", entry.getKey(), entry.getValue());
         }
+
+         */
 
         // Update the imagePaths to reflect the new sorted order based on similarity (closest to query image first)
         imagePaths = distanceList.stream().map(Map.Entry::getKey).toArray(String[]::new);
